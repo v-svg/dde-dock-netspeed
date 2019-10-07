@@ -8,7 +8,7 @@ MonitorWidget::MonitorWidget(QWidget *parent) : QWidget(parent)
 
 {
     updateSeconds = 2;
-    setFixedWidth(298);
+    setFixedWidth(319);
     setFixedHeight(98);
     QVBoxLayout *vbox = new QVBoxLayout;
     QHBoxLayout *hbox = new QHBoxLayout;

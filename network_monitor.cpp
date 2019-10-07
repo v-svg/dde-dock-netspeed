@@ -32,7 +32,7 @@
 
 NetworkMonitor::NetworkMonitor(QWidget *parent) : QWidget(parent)
 {
-    int MaxWidth = 300;
+    int MaxWidth = 321;
     setFixedWidth(MaxWidth);
     setFixedHeight(144);
 
@@ -195,7 +195,7 @@ void NetworkMonitor::paintEvent(QPaintEvent *)
 
     // Draw network summary.
     QFont font = qApp->font();
-    font.setPixelSize(13);
+    font.setPixelSize(14);
     font.setWeight(QFont::Bold);
     painter.setFont(font);
     QFontMetrics fm = painter.fontMetrics();
