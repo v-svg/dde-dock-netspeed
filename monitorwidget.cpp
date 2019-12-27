@@ -9,13 +9,10 @@ MonitorWidget::MonitorWidget(QWidget *parent) : QWidget(parent)
 {
     updateSeconds = 2;
     setFixedWidth(319);
-    setFixedHeight(98);
+    setFixedHeight(100);
     QVBoxLayout *vbox = new QVBoxLayout;
-    QHBoxLayout *hbox = new QHBoxLayout;
     networkMonitor = new NetworkMonitor;
-    hbox->addWidget(networkMonitor);
-    vbox->addLayout(hbox);
-    vbox->addStretch();
+    vbox->addWidget(networkMonitor);
     setLayout(vbox);
     connect(this, &MonitorWidget::updateNetworkStatus, this, &MonitorWidget::handleNetworkStatus, Qt::QueuedConnection);
     // Start timer.

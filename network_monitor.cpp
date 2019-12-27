@@ -34,7 +34,7 @@ NetworkMonitor::NetworkMonitor(QWidget *parent) : QWidget(parent)
 {
     int MaxWidth = 321;
     setFixedWidth(MaxWidth);
-    setFixedHeight(144);
+    setFixedHeight(98);
 
     pointsNumber = int(MaxWidth / 5.4);
 

@@ -58,7 +58,7 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
         if (position == Dock::Top || position == Dock::Bottom)
             painter.drawText(rect(), Qt::AlignRight | Qt::AlignVCenter, text + "  ");
         else
-            painter.drawText(rect(), Qt::AlignCenter, text.replace(" ","\n"));
+            painter.drawText(rect(), Qt::AlignCenter, text.replace(" ", "\n"));
         return;
     }
     // position and size
