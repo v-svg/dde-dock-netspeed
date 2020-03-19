@@ -296,9 +296,9 @@ void NetspeedPlugin::updateNetspeed()
         ubt1 += ub;
     }
     file.close();
-    QString dss = "";
-    QString uss = "";
-    QString oss = "";
+    QString dss = "0 KB/s";
+    QString uss = "0 KB/s";
+    QString oss = "0 KB/s";
     if (i > 0) {
         ds = dbt1 - dbt0;
         us = ubt1 - ubt0;
