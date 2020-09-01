@@ -24,6 +24,7 @@ private:
     void paintEvent(QPaintEvent *e);
     void resizeEvent(QResizeEvent *e);
     QSettings m_settings;
+    QString curText;
 };
 
 #endif // NETSPEEDWIDGET_H

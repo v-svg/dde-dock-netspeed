@@ -13,7 +13,7 @@ NetspeedWidget::NetspeedWidget(QWidget *parent)
       m_settings("deepin", "dde-dock-netspeed")
 
 {
-    text = "0 KB/s";
+    text = "0 KB/s";    
 }
 
 bool NetspeedWidget::enabled()
@@ -32,7 +32,7 @@ QSize NetspeedWidget::sizeHint() const
     QFontMetrics FM(font);
     const Dock::Position position = qApp->property(PROP_POSITION).value<Dock::Position>();
     if (position == Dock::Top || position == Dock::Bottom)
-        return QSize(FM.boundingRect(" 8.88 MB/s ").width() + 12, 26);
+        return QSize(FM.boundingRect(text).width() + 12, 26);
     else
         return QSize(FM.boundingRect("MB/s").width() + 12, FM.boundingRect("MB/s").height() * 2);
 }
@@ -51,14 +51,18 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
     const Dock::Position position = qApp->property(PROP_POSITION).value<Dock::Position>();
     QPainter painter(this);
 
+    if (curText != text)
+        emit requestUpdateGeometry();
+
     if (displayMode == Dock::Efficient) {
         QFont font = qApp->font();
         painter.setFont(font);
         painter.setPen(Qt::white);
         if (position == Dock::Top || position == Dock::Bottom)
-            painter.drawText(rect(), Qt::AlignRight | Qt::AlignVCenter, text + "  ");
+            painter.drawText(rect(), Qt::AlignCenter, text);
         else
             painter.drawText(rect(), Qt::AlignCenter, text.replace(" ", "\n"));
+        curText = text;
         return;
     }
     // position and size

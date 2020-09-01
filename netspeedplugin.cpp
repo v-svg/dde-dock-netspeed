@@ -22,6 +22,7 @@ NetspeedPlugin::NetspeedPlugin(QObject *parent)
     m_refershTimer->start();
     m_centralWidget = new NetspeedWidget;
     m_netspeedWidget = new MonitorWidget;
+
     connect(m_centralWidget, &NetspeedWidget::requestUpdateGeometry, [this] { m_proxyInter->itemUpdate(this, pluginName()); });
     connect(m_refershTimer, &QTimer::timeout, this, &NetspeedPlugin::updateNetspeed);
 
@@ -32,7 +33,11 @@ NetspeedPlugin::NetspeedPlugin(QObject *parent)
     QString PO = process->readAllStandardOutput();
     QString SD = PO.mid(PO.indexOf("=") + 1, PO.indexOf("\n") - PO.indexOf("=") - 1);
     SD.replace("s", " s");
-    startup = "⏱ " + SD;
+    startup = "🚀 " + SD;
+}
+
+NetspeedPlugin::~NetspeedPlugin()
+{
 }
 
 const QString NetspeedPlugin::pluginName() const
@@ -216,7 +221,7 @@ void NetspeedPlugin::updateNetspeed()
     file.close();
     QTime time(0, 0, 0);
     time = time.addSecs(line.left(line.indexOf(".")).toInt());
-    QString uptime = "⏲  " + time.toString("hh:mm:ss");
+    QString uptime = "⏰  " + time.toString("hh:mm:ss");
 
     // CPU
     file.setFileName("/sys/class/thermal/thermal_zone0/temp");
@@ -337,10 +342,10 @@ void NetspeedPlugin::updateNetspeed()
 void NetspeedPlugin::bootRecord()
 {
     QProcess *process = new QProcess;
-    process->start("last reboot");
+    process->start("/bin/bash -c \"last -x -R echo \"$USER\"\"");
     process->waitForFinished();
     QString PO = process->readAllStandardOutput();
-    PO.replace("reboot   system boot  ", "");
+//    PO.replace("reboot   system boot  ", "");
     QDialog *dialog = new QDialog;
     dialog->setWindowTitle(tr("Boot record"));
     dialog->setWindowIcon(QIcon::fromTheme("gshutdown"));

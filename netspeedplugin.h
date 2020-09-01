@@ -14,7 +14,8 @@ class NetspeedPlugin : public QObject, PluginsItemInterface
     Q_PLUGIN_METADATA(IID "com.deepin.dock.PluginsItemInterface" FILE "netspeed.json")
 
 public:
-    explicit NetspeedPlugin(QObject *parent = 0);
+     NetspeedPlugin(QObject *parent = nullptr);
+    ~NetspeedPlugin();
 
     const QString pluginName() const override;
     const QString pluginDisplayName() const override;
