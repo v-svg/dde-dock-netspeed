@@ -13,7 +13,7 @@ NetspeedWidget::NetspeedWidget(QWidget *parent)
       m_settings("deepin", "dde-dock-netspeed")
 
 {
-    text = "0 KB/s";    
+    text = "0 KB/s";
 }
 
 bool NetspeedWidget::enabled()
@@ -51,8 +51,6 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
     const Dock::Position position = qApp->property(PROP_POSITION).value<Dock::Position>();
     QPainter painter(this);
 
-    if (curText != text)
-        emit requestUpdateGeometry();
 
     if (displayMode == Dock::Efficient) {
         QFont font = qApp->font();
@@ -62,6 +60,8 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
             painter.drawText(rect(), Qt::AlignCenter, text);
         else
             painter.drawText(rect(), Qt::AlignCenter, text.replace(" ", "\n"));
+        if (curText != text)
+            emit requestUpdateGeometry();
         curText = text;
         return;
     }
