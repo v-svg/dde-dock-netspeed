@@ -46,11 +46,12 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
 {
     Q_UNUSED(e);
 
-    QString iconName = "netspeed";
+    QFont font = qApp->font();
+    QFontMetrics FM(font);
     const Dock::DisplayMode displayMode = qApp->property(PROP_DISPLAY_MODE).value<Dock::DisplayMode>();
     const Dock::Position position = qApp->property(PROP_POSITION).value<Dock::Position>();
-    QPainter painter(this);
 
+    QPainter painter(this);
 
     if (displayMode == Dock::Efficient) {
         QFont font = qApp->font();
@@ -60,7 +61,7 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
             painter.drawText(rect(), Qt::AlignCenter, text);
         else
             painter.drawText(rect(), Qt::AlignCenter, text.replace(" ", "\n"));
-        if (curText != text)
+        if (FM.width(curText) != FM.width(text))
             emit requestUpdateGeometry();
         curText = text;
         return;
@@ -101,8 +102,6 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
     painter.drawRect(-55, 3, 55, -7);
     painter.setBrush(uColor);
     painter.drawRect(0, 3, 55, -7);
-    QFont font = qApp->font();
-    QFontMetrics FM(font);
     font.setWeight(QFont::Black);
     font.setPixelSize(41);
     painter.setFont(font);
