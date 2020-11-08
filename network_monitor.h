@@ -58,7 +58,7 @@ private:
     int downloadWaveformsRenderOffsetY = 60;
     int gridPaddingRight = 21;
     int gridPaddingTop = 0;
-    int gridRenderOffsetY = 0;
+    int gridRenderOffsetY = 1;
     int gridSize = 20;
     int arrowRenderPaddingX = 10;
     int pointsNumber = 51;

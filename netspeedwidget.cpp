@@ -32,7 +32,7 @@ QSize NetspeedWidget::sizeHint() const
     QFontMetrics FM(font);
     const Dock::Position position = qApp->property(PROP_POSITION).value<Dock::Position>();
     if (position == Dock::Top || position == Dock::Bottom)
-        return QSize(FM.boundingRect(" 8.88 MB/s ").width() + 12, 26);
+        return QSize(FM.boundingRect(text).width() + 12, 26);
     else
         return QSize(FM.boundingRect("MB/s").width() + 12, FM.boundingRect("MB/s").height() * 2);
 }
@@ -46,9 +46,11 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
 {
     Q_UNUSED(e);
 
-    QString iconName = "netspeed";
+    QFont font = qApp->font();
+    QFontMetrics FM(font);
     const Dock::DisplayMode displayMode = qApp->property(PROP_DISPLAY_MODE).value<Dock::DisplayMode>();
     const Dock::Position position = qApp->property(PROP_POSITION).value<Dock::Position>();
+
     QPainter painter(this);
 
     if (displayMode == Dock::Efficient) {
@@ -56,9 +58,12 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
         painter.setFont(font);
         painter.setPen(Qt::white);
         if (position == Dock::Top || position == Dock::Bottom)
-            painter.drawText(rect(), Qt::AlignRight | Qt::AlignVCenter, text + "  ");
+            painter.drawText(rect(), Qt::AlignCenter, text);
         else
-            painter.drawText(rect(), Qt::AlignCenter, text.replace(" ","\n"));
+            painter.drawText(rect(), Qt::AlignCenter, text.replace(" ", "\n"));
+        if (FM.width(curText) != FM.width(text))
+            emit requestUpdateGeometry();
+        curText = text;
         return;
     }
     // position and size
@@ -97,8 +102,6 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
     painter.drawRect(-55, 3, 55, -7);
     painter.setBrush(uColor);
     painter.drawRect(0, 3, 55, -7);
-    QFont font = qApp->font();
-    QFontMetrics FM(font);
     font.setWeight(QFont::Black);
     font.setPixelSize(41);
     painter.setFont(font);

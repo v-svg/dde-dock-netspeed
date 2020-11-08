@@ -22,6 +22,7 @@ NetspeedPlugin::NetspeedPlugin(QObject *parent)
     m_refershTimer->start();
     m_centralWidget = new NetspeedWidget;
     m_netspeedWidget = new MonitorWidget;
+
     connect(m_centralWidget, &NetspeedWidget::requestUpdateGeometry, [this] { m_proxyInter->itemUpdate(this, pluginName()); });
     connect(m_refershTimer, &QTimer::timeout, this, &NetspeedPlugin::updateNetspeed);
 
@@ -31,9 +32,12 @@ NetspeedPlugin::NetspeedPlugin(QObject *parent)
     process->waitForFinished();
     QString PO = process->readAllStandardOutput();
     QString SD = PO.mid(PO.indexOf("=") + 1, PO.indexOf("\n") - PO.indexOf("=") - 1);
-    SD.replace(QString("s"), QString(" s"));
-    startup = "⏱ " + SD;
+    SD.replace("s", " s");
+    startup = "🚀 " + SD;
+}
 
+NetspeedPlugin::~NetspeedPlugin()
+{
 }
 
 const QString NetspeedPlugin::pluginName() const
@@ -152,8 +156,10 @@ QString NetspeedPlugin::KB(long k)
     if (k > 999999)
         s = QString::number(k / (1024 * 1024.0), 'f', 1) + " GB";
     else {
-        if (k > 999) s = QString::number(k / 1024.0, 'f', 0) + " MB";
-        else s = QString::number(k / 1.0, 'f', 0) + " KB";
+        if (k > 999)
+            s = QString::number(k / 1024.0, 'f', 0) + " MB";
+        else
+            s = QString::number(k / 1.0, 'f', 0) + " KB";
     }
     return s;
 }
@@ -161,14 +167,19 @@ QString NetspeedPlugin::KB(long k)
 QString NetspeedPlugin::BS(long b)
 {
     QString s = "";
-    if (b > 9999999999) s = QString::number(b / (1024 * 1024 * 1024.0), 'f', 1) + " GB";
+    if (b > 9999999999)
+        s = QString::number(b / (1024 * 1024 * 1024.0), 'f', 1) + " GB";
     else {
-        if (b > 999999999) s = QString::number(b / (1024 * 1024 * 1024.0), 'f', 2) + " GB";
+        if (b > 999999999)
+            s = QString::number(b / (1024 * 1024 * 1024.0), 'f', 2) + " GB";
         else {
-            if (b > 999999) s = QString::number(b / (1024 * 1024.0), 'f', 1) + " MB";
+            if (b > 999999)
+                s = QString::number(b / (1024 * 1024.0), 'f', 1) + " MB";
             else {
-                if (b > 999) s = QString::number(b / (1024.0), 'f', 0) + " KB";
-                else s = b + " B";
+                if (b > 999)
+                    s = QString::number(b / (1024.0), 'f', 0) + " KB";
+                else
+                    s = b + " B";
             }
         }
     }
@@ -178,16 +189,22 @@ QString NetspeedPlugin::BS(long b)
 QString NetspeedPlugin::NB(long b)
 {
     QString s = "";
-    if (b > 999999999) s = QString::number(b / (1024 * 1024 * 1024.0), 'f', 2) + " GB";
+    if (b > 999999999)
+        s = QString::number(b / (1024 * 1024 * 1024.0), 'f', 2) + " GB";
     else {
-        if (b > 99999999) s = QString::number(b / (1024 * 1024.0), 'f', 0) + " MB";
+        if (b > 99999999)
+            s = QString::number(b / (1024 * 1024.0), 'f', 0) + " MB";
         else {
-            if (b > 9999999) s = QString::number(b / (1024 * 1024.0), 'f', 1) + " MB";
+            if (b > 9999999)
+                s = QString::number(b / (1024 * 1024.0), 'f', 1) + " MB";
             else {
-                if (b > 999999) s = QString::number(b / (1024 * 1024.0), 'f', 2) + " MB";
+                if (b > 999999)
+                    s = QString::number(b / (1024 * 1024.0), 'f', 2) + " MB";
 	           else {		
-		          if (b > 999) s = QString::number(b / 1024, 'f', 0) + " KB";
-		          else s = QString::number(0, 'f', 0) + " KB";
+		          if (b > 999)
+                        s = QString::number(b / 1024, 'f', 0) + " KB";
+		          else
+                        s = "0 KB";
                 }
             }
         }
@@ -200,102 +217,124 @@ void NetspeedPlugin::updateNetspeed()
     // uptime
     QFile file("/proc/uptime");
     file.open(QIODevice::ReadOnly);
-    QString l = file.readLine();
-    file.close();
-    QTime t(0,0,0);
-    t = t.addSecs(l.left(l.indexOf(".")).toInt());
-    QString uptime = "⏲  " + t.toString("hh:mm:ss");
-
-    // CPU
-    file.setFileName("/sys/class/hwmon/hwmon0/temp1_input");
-    file.open(QIODevice::ReadOnly);
     QString line = file.readLine();
     file.close();
-    QString str(line);
-    int lt = str.toDouble() * 0.001;
+    QTime time(0, 0, 0);
+    time = time.addSecs(line.left(line.indexOf(".")).toInt());
+    QString uptime = "⏰  " + time.toString("hh:mm:ss");
+
+    // CPU
+    file.setFileName("/sys/class/thermal/thermal_zone0/temp");
+    if (file.open(QIODevice::ReadOnly)) {
+        line = file.readLine();
+        file.close();
+    } else {
+        file.setFileName("/sys/class/hwmon/hwmon0/temp1_input");
+        file.open(QIODevice::ReadOnly);
+        line = file.readLine();
+        file.close();
+    }
+    double lt = line.toDouble() / 1000;
 
     file.setFileName("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq");
-    file.open(QIODevice::ReadOnly);
-    QString line1 = file.readLine();
-    file.close();
-    QString str1(line1);
-    QString ln = QString::number(str1.toDouble() / 1000000, 'f', 2);
+    double ln;
+    if (file.open(QIODevice::ReadOnly)) {
+        line = file.readLine();
+        file.close();
+        ln = line.toDouble() / 1000000;
+    } else {
+        file.setFileName("/proc/cpuinfo");
+        file.open(QIODevice::ReadOnly);
+        for (int st = 0; st < 8; st++)
+            line = file.readLine();
+        int pos = line.indexOf(": ");
+        pos += 2;
+        line = line.mid(pos);
+        file.close();
+        ln = line.toDouble() / 1000;
+    }
 
     file.setFileName("/proc/stat");
     file.open(QIODevice::ReadOnly);
-    l = file.readLine();
+    line = file.readLine();
     QByteArray ba;
-    ba = l.toLatin1();
+    ba = line.toLatin1();
     const char *ch;
     ch = ba.constData();
     char cpu[5];
-    long user,nice,sys,idle,iowait,irq,softirq,tt;
-    sscanf(ch,"%s%ld%ld%ld%ld%ld%ld%ld",cpu,&user,&nice,&sys,&idle,&iowait,&irq,&softirq);
+    long user, nice, sys, idle, iowait, irq, softirq, tt;
+    sscanf(ch, "%s%ld%ld%ld%ld%ld%ld%ld", cpu, &user, &nice, &sys, &idle, &iowait, &irq, &softirq);
     tt = user + nice + sys + idle + iowait + irq + softirq;
     file.close();
     QString cusage = "";
-    int cp = ((tt-tt0)-(idle-idle0))*100/(tt-tt0);
-    if(i>0) cusage = "🏾  " + ln + " GHz  " + QString::number(lt) + " °C  " + QString::number(cp) + "%";
+    int cp = ((tt - tt0) - (idle - idle0)) * 100 / (tt - tt0);
+    if (i > 0)
+        cusage = "🏾  " + QString::number(ln, 'f', 2) + " GHz  " + QString::number(lt) + " °C  " + QString::number(cp) + "%";
     idle0 = idle;
     tt0 = tt;
 
     // memory
     file.setFileName("/proc/meminfo");
     file.open(QIODevice::ReadOnly);
-    l = file.readLine();
-    long mt = l.replace("MemTotal:","").replace("kB","").replace(" ","").toLong();
-    l = file.readLine();
-    l = file.readLine();
-    long ma = l.replace("MemAvailable:","").replace("kB","").replace(" ","").toLong();
-    l = file.readLine();
-    l = file.readLine();
+    line = file.readLine();
+    long mt = line.replace("MemTotal:", "").replace("kB", "").replace(" ", "").toLong();
+    line = file.readLine();
+    line = file.readLine();
+    long ma = line.replace("MemAvailable:", "").replace("kB", "").replace(" ", "").toLong();
     file.close();
     long mu = mt - ma;
-    int mp = mu*100/mt;
+    int mp = mu * 100 / mt;
     QString mem = "🝚  " + QString("%1 / %2 %3").arg(KB(mu)).arg(KB(mt)).arg(" " + QString::number(mp) + "%");
 
     // net
     file.setFileName("/proc/net/dev");
     file.open(QIODevice::ReadOnly);
-    l = file.readLine();
-    l = file.readLine();
+    line = file.readLine();
+    line = file.readLine();
     dbt1 = ubt1 = 0;
-    while(!file.atEnd()){
-        l = file.readLine();
-        QStringList list = l.split(QRegExp("\\s{1,}"));
+    while (!file.atEnd()) {
+        line = file.readLine();
+        QStringList list = line.split(QRegExp("\\s{1,}"));
         db = list.at(1).toLong();
         ub = list.at(9).toLong();
         dbt1 += db;
         ubt1 += ub;
     }
     file.close();
-    QString dss = "";
-    QString uss = "";
-    QString oss = "";
+    QString dss = "0 KB/s";
+    QString uss = "0 KB/s";
+    QString oss = "0 KB/s";
     if (i > 0) {
         ds = dbt1 - dbt0;
         us = ubt1 - ubt0;
         dss = NB(ds) + "/s";
         uss = NB(us) + "/s";
-        if (ds > us) {
-        oss = NB(ds) + "/s";
-        } else {
-        oss = NB(us) + "/s";
-        }
+        if (ds > us)
+            oss = NB(ds) + "/s";
+        else
+            oss = NB(us) + "/s";
         dbt0 = dbt1;
         ubt0 = ubt1;
     }
     QString net = "🡇  " + dss + "  " + BS(dbt1) + "\n🡅  " + uss + "  " + BS(ubt1);
     i++;
-    if (i>2) i = 2;
+    if (i > 2)
+        i = 2;
 
     // draw
     m_tipsLabel->setText(startup + "\n" + uptime + "\n" + cusage + "\n" + mem + "\n" + net);
+
     m_centralWidget->text = oss;
-    if (ds > 999) m_centralWidget->download = 1;
-    else m_centralWidget->download = 0;
-    if (us > 999) m_centralWidget->upload = 1;
-    else m_centralWidget->upload = 0;
+
+    if (ds > 999)
+        m_centralWidget->download = 1;
+    else
+        m_centralWidget->download = 0;
+    if (us > 999)
+        m_centralWidget->upload = 1;
+    else
+        m_centralWidget->upload = 0;
+
     m_centralWidget->update();
 
 }
@@ -303,12 +342,14 @@ void NetspeedPlugin::updateNetspeed()
 void NetspeedPlugin::bootRecord()
 {
     QProcess *process = new QProcess;
-    process->start("last reboot");
+    process->start("/bin/bash -c \"last -x -R echo \"$USER\"\"");
     process->waitForFinished();
     QString PO = process->readAllStandardOutput();
+//    PO.replace("reboot   system boot  ", "");
     QDialog *dialog = new QDialog;
     dialog->setWindowTitle(tr("Boot record"));
-    dialog->setFixedSize(540,400);
+    dialog->setWindowIcon(QIcon::fromTheme("gshutdown"));
+    dialog->setFixedSize(500, 400);
     QVBoxLayout *vbox = new QVBoxLayout;
     QTextBrowser *textBrowser = new QTextBrowser;
     textBrowser->setText(PO);
@@ -323,7 +364,7 @@ void NetspeedPlugin::bootRecord()
     dialog->setLayout(vbox);
     dialog->show();
     connect(pushButton_confirm, SIGNAL(clicked()), dialog, SLOT(accept()));
-    if(dialog->exec() == QDialog::Accepted){
+    if (dialog->exec() == QDialog::Accepted) {
         dialog->close();
     }
 }
@@ -336,7 +377,8 @@ void NetspeedPlugin::bootAnalyze()
     QString PO = process->readAllStandardOutput();
     QDialog *dialog = new QDialog;
     dialog->setWindowTitle(tr("Boot analyze"));
-    dialog->setFixedSize(540,400);
+    dialog->setWindowIcon(QIcon::fromTheme("kronometer"));
+    dialog->setFixedSize(500, 400);
     QVBoxLayout *vbox = new QVBoxLayout;
     QTextBrowser *textBrowser = new QTextBrowser;
     textBrowser->setText(PO);
@@ -351,7 +393,7 @@ void NetspeedPlugin::bootAnalyze()
     dialog->setLayout(vbox);
     dialog->show();
     connect(pushButton_confirm, SIGNAL(clicked()), dialog, SLOT(accept()));
-    if(dialog->exec() == QDialog::Accepted){
+    if (dialog->exec() == QDialog::Accepted) {
         dialog->close();
     }
 }
