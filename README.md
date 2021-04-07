@@ -11,7 +11,9 @@ Press the center mouse button to display the floating widget.
 ### Installation Guide ###
 Compiling using Qt Creator or using the following command:
 ```
-qmake
+mkdir build
+cd build
+qmake ..
 make
 ```
 Installation: 
