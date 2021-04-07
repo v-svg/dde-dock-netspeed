@@ -2,8 +2,10 @@
 #define NetspeedPlugin_H
 
 #include "dde-dock/pluginsiteminterface.h"
+#include "netspeeditem.h"
 #include "monitorwidget.h"
-#include "netspeedwidget.h"
+#include "floatingwidget.h"
+
 #include <QTimer>
 #include <QLabel>
 
@@ -39,10 +41,11 @@ private slots:
     void updateNetspeed();
 
 private:
+    void bootRecord();
+    void bootAnalyze();
+    void showFloatingWidget();
     long int i, ds, us, db, ub, dbt1, ubt1, dbt0, ubt0, tt0, idle0;
-    QPointer<NetspeedWidget> m_centralWidget;
-    QPointer<MonitorWidget> m_netspeedWidget;
-    QPointer<QLabel> m_tipsLabel;
+    QLabel *m_tipsLabel;
     QTimer *m_refershTimer;
     QSettings m_settings;
     QString KB(long k);
@@ -50,9 +53,9 @@ private:
     QString NB(long b);
     QString FB(long b);
     QString startup;
-    void bootRecord();
-    void bootAnalyze();
-
+    NetspeedItem *m_netspeedItem;
+    MonitorWidget *m_monitorWidget;
+    FloatingWidget *m_floatingWidget;
 };
 
 #endif // NetspeedPlugin_H

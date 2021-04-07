@@ -1,21 +1,26 @@
 QT              += widgets svg gui
 TEMPLATE         = lib
-CONFIG          += c++11 plugin link_pkgconfig
+CONFIG          += plugin c++11 link_pkgconfig
 PKGCONFIG       += dtkwidget
 
 TARGET           = netspeed
+DESTDIR          = $$_PRO_FILE_PWD_
 DISTFILES       += netspeed.json
 
 HEADERS += \
+    floatingwidget.h \
     monitorwidget.h \
     netspeedplugin.h \
-    netspeedwidget.h \
+    netspeeditem.h \
     network_monitor.h \
     smooth_curve_generator.h
 
 SOURCES += \
+    floatingwidget.cpp \
     monitorwidget.cpp \
     netspeedplugin.cpp \
-    netspeedwidget.cpp \
+    netspeeditem.cpp \
     network_monitor.cpp \
     smooth_curve_generator.cpp
+
+RESOURCES += images.qrc

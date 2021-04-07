@@ -33,6 +33,8 @@ class NetworkMonitor : public QWidget
 public:
     NetworkMonitor(QWidget *parent = 0);
     ~NetworkMonitor();
+
+    void setColor(const QString &color);
     
 public slots:
     void update_Status(long totalRecvBytes, long totalSentBytes, float totalRecvKbs, float totalSentKbs);
@@ -46,22 +48,22 @@ private:
     QPainterPath downloadPath;
     QPainterPath uploadPath;
     QString downloadColor = "#55D500";
-    QString summaryColor = "#FFFFFF";
-    QString textColor = "#FFFFFF";
-    QString uploadColor = "#FF9800";
+    QString uploadColor = "#F5AF00";
+    QString textColor;
     float totalRecvKbs = 0;
     float totalSentKbs = 0;
     int downloadRenderMaxHeight = 50;
     int downloadRenderPaddingX = 30;
     int downloadRenderPaddingY = 10;
-    int downloadWaveformsRenderOffsetX = 4;
+    int downloadWaveformsRenderOffsetX = -6;
     int downloadWaveformsRenderOffsetY = 60;
-    int gridPaddingRight = 21;
+    int gridPaddingRight = 18;
     int gridPaddingTop = 0;
     int gridRenderOffsetY = 1;
     int gridSize = 20;
     int arrowRenderPaddingX = 10;
-    int pointsNumber = 51;
+    int arrowRenderPaddingY = 1;
+    int pointsNumber = 58;
     int textPadding = 8;
     int uploadRenderMaxHeight = 10;
     int uploadRenderPaddingX = 30;
@@ -72,4 +74,4 @@ private:
     long totalSentBytes = 0;
 };
 
-#endif    
+#endif

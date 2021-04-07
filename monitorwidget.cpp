@@ -1,24 +1,29 @@
 #include "monitorwidget.h"
-#include "network_monitor.h"
-#include "netspeedplugin.h"
-#include <QApplication>
+
 #include <QVBoxLayout>
 
 MonitorWidget::MonitorWidget(QWidget *parent) : QWidget(parent)
 
 {
-    updateSeconds = 2;
     setFixedWidth(319);
-    setFixedHeight(100);
+    setFixedHeight(99);
+
+    m_networkMonitor = new NetworkMonitor;
     QVBoxLayout *vbox = new QVBoxLayout;
-    networkMonitor = new NetworkMonitor;
-    vbox->addWidget(networkMonitor);
+    vbox->setContentsMargins(8, 8, 8, 8);
+    vbox->addWidget(m_networkMonitor);
     setLayout(vbox);
-    connect(this, &MonitorWidget::updateNetworkStatus, this, &MonitorWidget::handleNetworkStatus, Qt::QueuedConnection);
-    // Start timer.
+
+    floatButton = new DImageButton(this);
+    floatButton->setFixedSize(16, 16);
+    floatButton->move(284, 19);
+
     updateStatusTimer = new QTimer(this);
-    connect(updateStatusTimer, SIGNAL(timeout()), this, SLOT(updateStatus()));
     updateStatusTimer->start(2000);
+
+    connect(updateStatusTimer, &QTimer::timeout, this, &MonitorWidget::updateStatus);
+    connect(this, &MonitorWidget::updateNetworkStatus,
+            m_networkMonitor, &NetworkMonitor::update_Status, Qt::QueuedConnection);
 }
 
 MonitorWidget::~MonitorWidget()
@@ -68,24 +73,23 @@ void MonitorWidget::updateStatus()
 {
     // Update network status.
     if (prevTotalRecvBytes == 0) {
-        prevTotalRecvBytes = totalRecvBytes;
-        prevTotalSentBytes = totalSentBytes;
+        prevTotalRecvBytes = nextTotalRecvBytes;
+        prevTotalSentBytes = nextTotalSentBytes;
 
-        getNetworkBandWidth(totalRecvBytes, totalSentBytes);
-        updateNetworkStatus(totalRecvBytes, totalSentBytes, 0, 0);
+        getNetworkBandWidth(nextTotalRecvBytes, nextTotalSentBytes);
+        updateNetworkStatus(nextTotalRecvBytes, nextTotalSentBytes, 0, 0);
     } else {
-        prevTotalRecvBytes = totalRecvBytes;
-        prevTotalSentBytes = totalSentBytes;
+        prevTotalRecvBytes = nextTotalRecvBytes;
+        prevTotalSentBytes = nextTotalSentBytes;
 
-        getNetworkBandWidth(totalRecvBytes, totalSentBytes);
-        updateNetworkStatus(totalRecvBytes,
-                            totalSentBytes,
-                            ((totalRecvBytes - prevTotalRecvBytes) / 1024.0) / updateSeconds,
-                            ((totalSentBytes - prevTotalSentBytes) / 1024.0) / updateSeconds);
+        getNetworkBandWidth(nextTotalRecvBytes, nextTotalSentBytes);
+        updateNetworkStatus(nextTotalRecvBytes, nextTotalSentBytes,
+                            ((nextTotalRecvBytes - prevTotalRecvBytes) / 1024.0) / updateSeconds,
+                            ((nextTotalSentBytes - prevTotalSentBytes) / 1024.0) / updateSeconds);
     }
 }
 
-void MonitorWidget::handleNetworkStatus(long totalRecvBytes, long totalSentBytes, float totalRecvKbs, float totalSentKbs)
+void MonitorWidget::setColor(const QString &color)
 {
-        networkMonitor->update_Status(totalRecvBytes, totalSentBytes, totalRecvKbs, totalSentKbs);
+    m_networkMonitor->setColor(color);
 }

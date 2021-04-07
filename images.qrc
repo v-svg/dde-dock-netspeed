@@ -1,0 +1,28 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/dark_close_hover.svg</file>
+        <file>images/dark_close_normal.svg</file>
+        <file>images/dark_close_press.svg</file>
+        <file>images/dark_opacity_hover.svg</file>
+        <file>images/dark_opacity_normal.svg</file>
+        <file>images/dark_opacity_press.svg</file>
+        <file>images/dark_theme_hover.svg</file>
+        <file>images/dark_theme_normal.svg</file>
+        <file>images/dark_theme_press.svg</file>
+        <file>images/dark_up_hover.svg</file>
+        <file>images/dark_up_normal.svg</file>
+        <file>images/dark_up_press.svg</file>
+        <file>images/light_close_hover.svg</file>
+        <file>images/light_close_normal.svg</file>
+        <file>images/light_close_press.svg</file>
+        <file>images/light_opacity_hover.svg</file>
+        <file>images/light_opacity_normal.svg</file>
+        <file>images/light_opacity_press.svg</file>
+        <file>images/light_theme_hover.svg</file>
+        <file>images/light_theme_normal.svg</file>
+        <file>images/light_theme_press.svg</file>
+        <file>images/light_up_hover.svg</file>
+        <file>images/light_up_normal.svg</file>
+        <file>images/light_up_press.svg</file>
+    </qresource>
+</RCC>

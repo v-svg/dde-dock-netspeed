@@ -1,15 +1,15 @@
-#ifndef NETSPEEDWIDGET_H
-#define NETSPEEDWIDGET_H
+#ifndef NETSPEEDITEM_H
+#define NETSPEEDITEM_H
 
 #include <QWidget>
 #include <QSettings>
 
-class NetspeedWidget : public QWidget
+class NetspeedItem : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit NetspeedWidget(QWidget *parent = 0);
+    explicit NetspeedItem(QWidget *parent = nullptr);
     bool enabled();
     void setEnabled(const bool b);
     QString text;
@@ -18,13 +18,17 @@ public:
 
 signals:
     void requestUpdateGeometry() const;
+    void mouseMidBtnClicked() const;
 
-private:
+protected:
     QSize sizeHint() const;
     void paintEvent(QPaintEvent *e);
     void resizeEvent(QResizeEvent *e);
+    void mouseReleaseEvent(QMouseEvent *e);
+
+private:
     QSettings m_settings;
     QString curText;
 };
 
-#endif // NETSPEEDWIDGET_H
+#endif // NETSPEEDITEM_H

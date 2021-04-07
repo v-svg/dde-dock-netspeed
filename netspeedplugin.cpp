@@ -1,31 +1,44 @@
 #include "netspeedplugin.h"
-#include "monitorwidget.h"
-#include <QLabel>
-#include <QApplication>
-#include <QDesktopWidget>
-#include <QMessageBox>
+
+#include <DApplication>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTextBrowser>
+#include <QTextEdit>
 #include <QPushButton>
+#include <QDialog>
+#include <QTimer>
+
+DWIDGET_USE_NAMESPACE
 
 NetspeedPlugin::NetspeedPlugin(QObject *parent)
-    : QObject(parent),
-      m_tipsLabel(new QLabel),
-      m_refershTimer(new QTimer(this)),
-      m_settings("deepin", "dde-dock-netspeed")
+    : QObject(parent)
+    , m_tipsLabel(new QLabel)
+    , m_refershTimer(new QTimer(this))
+    , m_settings("deepin", "dde-dock-netspeed")
+    , m_netspeedItem(new NetspeedItem)
+    , m_monitorWidget(new MonitorWidget)
+    , m_floatingWidget(new FloatingWidget)
 {
+    QString applicationName = qApp->applicationName();
+    qApp->setApplicationName("dde-dock-netspeed");
+    qDebug() << qApp->loadTranslator();
+    qApp->setApplicationName(applicationName);
+
     i = ds = us = db = ub = dbt1 = ubt1 = dbt0 = ubt0 = 0;
     m_tipsLabel->setObjectName("netspeed");
-    m_tipsLabel->setStyleSheet("color:white; padding:0px 2px;");
+    m_tipsLabel->setStyleSheet("padding: 0px 2px;");
     m_refershTimer->setInterval(1000);
     m_refershTimer->start();
-    m_centralWidget = new NetspeedWidget;
-    m_netspeedWidget = new MonitorWidget;
 
-    connect(m_centralWidget, &NetspeedWidget::requestUpdateGeometry, [this] { m_proxyInter->itemUpdate(this, pluginName()); });
+
+    connect(m_monitorWidget->floatButton, &DImageButton::clicked, this, &NetspeedPlugin::showFloatingWidget);
+    connect(m_netspeedItem, &NetspeedItem::mouseMidBtnClicked, this, &NetspeedPlugin::showFloatingWidget);
+    connect(m_netspeedItem, &NetspeedItem::requestUpdateGeometry, [this] {
+            m_proxyInter->itemUpdate(this, pluginName());
+    });
     connect(m_refershTimer, &QTimer::timeout, this, &NetspeedPlugin::updateNetspeed);
-
+    connect(m_floatingWidget, &FloatingWidget::isHidden,  [this] {
+            m_monitorWidget->floatButton->show();
+    });
     // Boot time
     QProcess *process = new QProcess;
     process->start("systemd-analyze");
@@ -53,14 +66,14 @@ const QString NetspeedPlugin::pluginDisplayName() const
 void NetspeedPlugin::init(PluginProxyInterface *proxyInter)
 {
     m_proxyInter = proxyInter;
-    if (m_centralWidget->enabled())
+    if (m_netspeedItem->enabled())
         m_proxyInter->itemAdded(this, pluginName());
 }
 
 void NetspeedPlugin::pluginStateSwitched()
 {
-    m_centralWidget->setEnabled(!m_centralWidget->enabled());
-    if (m_centralWidget->enabled())
+    m_netspeedItem->setEnabled(!m_netspeedItem->enabled());
+    if (m_netspeedItem->enabled())
         m_proxyInter->itemAdded(this, pluginName());
     else
         m_proxyInter->itemRemoved(this, pluginName());
@@ -68,7 +81,7 @@ void NetspeedPlugin::pluginStateSwitched()
 
 bool NetspeedPlugin::pluginIsDisable()
 {
-    return !m_centralWidget->enabled();
+    return !m_netspeedItem->enabled();
 }
 
 int NetspeedPlugin::itemSortKey(const QString &itemKey)
@@ -90,7 +103,7 @@ void NetspeedPlugin::setSortKey(const QString &itemKey, const int order)
 QWidget *NetspeedPlugin::itemWidget(const QString &itemKey)
 {
     Q_UNUSED(itemKey);
-    return m_centralWidget;
+    return m_netspeedItem;
 }
 
 QWidget *NetspeedPlugin::itemTipsWidget(const QString &itemKey)
@@ -102,8 +115,25 @@ QWidget *NetspeedPlugin::itemTipsWidget(const QString &itemKey)
 QWidget *NetspeedPlugin::itemPopupApplet(const QString &itemKey)
 {
     Q_UNUSED(itemKey);
-    m_netspeedWidget->update();
-    return m_netspeedWidget;
+
+    QColor textColor = QApplication::palette().text().color();
+    m_monitorWidget->setColor(textColor.name());
+
+    if (textColor == Qt::white) {
+        m_monitorWidget->floatButton->setNormalPic(":/images/light_up_normal.svg");
+        m_monitorWidget->floatButton->setHoverPic(":/images/light_up_hover.svg");
+        m_monitorWidget->floatButton->setPressPic(":/images/light_up_press.svg");
+    } else {
+        m_monitorWidget->floatButton->setNormalPic(":/images/dark_up_normal.svg");
+        m_monitorWidget->floatButton->setHoverPic(":/images/dark_up_hover.svg");
+        m_monitorWidget->floatButton->setPressPic(":/images/dark_up_press.svg");
+    }
+
+    if (!m_floatingWidget->isVisible()) {
+        return m_monitorWidget;
+    } else {
+        return nullptr;
+    }
 }
 
 const QString NetspeedPlugin::itemContextMenu(const QString &itemKey)
@@ -324,18 +354,18 @@ void NetspeedPlugin::updateNetspeed()
     // draw
     m_tipsLabel->setText(startup + "\n" + uptime + "\n" + cusage + "\n" + mem + "\n" + net);
 
-    m_centralWidget->text = oss;
+    m_netspeedItem->text = oss;
 
     if (ds > 999)
-        m_centralWidget->download = 1;
+        m_netspeedItem->download = 1;
     else
-        m_centralWidget->download = 0;
+        m_netspeedItem->download = 0;
     if (us > 999)
-        m_centralWidget->upload = 1;
+        m_netspeedItem->upload = 1;
     else
-        m_centralWidget->upload = 0;
+        m_netspeedItem->upload = 0;
 
-    m_centralWidget->update();
+    m_netspeedItem->update();
 
 }
 
@@ -344,29 +374,28 @@ void NetspeedPlugin::bootRecord()
     QProcess *process = new QProcess;
     process->start("/bin/bash -c \"last -x -R echo \"$USER\"\"");
     process->waitForFinished();
-    QString PO = process->readAllStandardOutput();
-//    PO.replace("reboot   system boot  ", "");
+
+    QTextEdit *textEdit = new QTextEdit;
+    textEdit->setText(process->readAllStandardOutput());
+    textEdit->setReadOnly(true);
+
+    QPushButton *button = new QPushButton("OK");
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->setContentsMargins(0, 0, 0, 11);
+    layout->setSpacing(9);
+    layout->addWidget(textEdit);
+    layout->addWidget(button, 0, Qt::AlignCenter);
+
     QDialog *dialog = new QDialog;
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowTitle(tr("Boot record"));
     dialog->setWindowIcon(QIcon::fromTheme("gshutdown"));
     dialog->setFixedSize(500, 400);
-    QVBoxLayout *vbox = new QVBoxLayout;
-    QTextBrowser *textBrowser = new QTextBrowser;
-    textBrowser->setText(PO);
-    textBrowser->zoomIn();
-    vbox->addWidget(textBrowser);
-    QHBoxLayout *hbox = new QHBoxLayout;
-    QPushButton *pushButton_confirm = new QPushButton("OK");
-    hbox->addStretch();
-    hbox->addWidget(pushButton_confirm);
-    hbox->addStretch();
-    vbox->addLayout(hbox);
-    dialog->setLayout(vbox);
-    dialog->show();
-    connect(pushButton_confirm, SIGNAL(clicked()), dialog, SLOT(accept()));
-    if (dialog->exec() == QDialog::Accepted) {
-        dialog->close();
-    }
+    dialog->setLayout(layout);
+    dialog->open();
+
+    connect(button, &QPushButton::clicked, dialog, &QDialog::close);
 }
 
 void NetspeedPlugin::bootAnalyze()
@@ -374,26 +403,39 @@ void NetspeedPlugin::bootAnalyze()
     QProcess *process = new QProcess;
     process->start("systemd-analyze blame");
     process->waitForFinished();
-    QString PO = process->readAllStandardOutput();
+
+    QTextEdit *textEdit = new QTextEdit;
+    textEdit->setText(process->readAllStandardOutput());
+    textEdit->setReadOnly(true);
+
+    QPushButton *button = new QPushButton("OK");
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->setContentsMargins(0, 0, 0, 11);
+    layout->setSpacing(9);
+    layout->addWidget(textEdit);
+    layout->addWidget(button, 0, Qt::AlignCenter);
+
     QDialog *dialog = new QDialog;
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowTitle(tr("Boot analyze"));
     dialog->setWindowIcon(QIcon::fromTheme("kronometer"));
     dialog->setFixedSize(500, 400);
-    QVBoxLayout *vbox = new QVBoxLayout;
-    QTextBrowser *textBrowser = new QTextBrowser;
-    textBrowser->setText(PO);
-    textBrowser->zoomIn();
-    vbox->addWidget(textBrowser);
-    QHBoxLayout *hbox = new QHBoxLayout;
-    QPushButton *pushButton_confirm = new QPushButton("OK");
-    hbox->addStretch();
-    hbox->addWidget(pushButton_confirm);
-    hbox->addStretch();
-    vbox->addLayout(hbox);
-    dialog->setLayout(vbox);
-    dialog->show();
-    connect(pushButton_confirm, SIGNAL(clicked()), dialog, SLOT(accept()));
-    if (dialog->exec() == QDialog::Accepted) {
-        dialog->close();
+    dialog->setLayout(layout);
+    dialog->open();
+
+    connect(button, &QPushButton::clicked, dialog, &QDialog::close);
+}
+
+void NetspeedPlugin::showFloatingWidget()
+{
+    if (!m_floatingWidget->isVisible()) {
+        if (m_monitorWidget->isVisible())
+            m_monitorWidget->parentWidget()->hide();
+        m_monitorWidget->floatButton->hide();
+        m_floatingWidget->show();
+    } else {
+        m_monitorWidget->floatButton->show();
+        m_floatingWidget->hide();
     }
 }

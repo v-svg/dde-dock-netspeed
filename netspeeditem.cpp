@@ -1,14 +1,14 @@
-#include "netspeedwidget.h"
+#include "netspeeditem.h"
 #include "dde-dock/constants.h"
+
 #include <QApplication>
 #include <QPainter>
-#include <QDebug>
 #include <QMouseEvent>
 #include <QLinearGradient>
 
 #define PLUGIN_STATE_KEY    "enable"
 
-NetspeedWidget::NetspeedWidget(QWidget *parent)
+NetspeedItem::NetspeedItem(QWidget *parent)
     : QWidget(parent),
       m_settings("deepin", "dde-dock-netspeed")
 
@@ -16,17 +16,17 @@ NetspeedWidget::NetspeedWidget(QWidget *parent)
     text = "0 KB/s";
 }
 
-bool NetspeedWidget::enabled()
+bool NetspeedItem::enabled()
 {
     return m_settings.value(PLUGIN_STATE_KEY, true).toBool();
 }
 
-void NetspeedWidget::setEnabled(const bool b)
+void NetspeedItem::setEnabled(const bool b)
 {
     m_settings.setValue(PLUGIN_STATE_KEY, b);
 }
 
-QSize NetspeedWidget::sizeHint() const
+QSize NetspeedItem::sizeHint() const
 {    
     QFont font = qApp->font();
     QFontMetrics FM(font);
@@ -37,12 +37,20 @@ QSize NetspeedWidget::sizeHint() const
         return QSize(FM.boundingRect("MB/s").width() + 12, FM.boundingRect("MB/s").height() * 2);
 }
 
-void NetspeedWidget::resizeEvent(QResizeEvent *e)
+void NetspeedItem::resizeEvent(QResizeEvent *e)
 {
     QWidget::resizeEvent(e);
 }
 
-void NetspeedWidget::paintEvent(QPaintEvent *e)
+void NetspeedItem::mouseReleaseEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::MidButton)
+        emit mouseMidBtnClicked();
+
+    QWidget::mouseReleaseEvent(e);
+}
+
+void NetspeedItem::paintEvent(QPaintEvent *e)
 {
     Q_UNUSED(e);
 
@@ -57,13 +65,14 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
         QFont font = qApp->font();
         painter.setFont(font);
         painter.setPen(Qt::white);
-        if (position == Dock::Top || position == Dock::Bottom)
+        if (position == Dock::Top || position == Dock::Bottom) {
             painter.drawText(rect(), Qt::AlignCenter, text);
-        else
+            if (FM.width(curText) != FM.width(text))
+                emit requestUpdateGeometry();
+            curText = text;
+        } else {
             painter.drawText(rect(), Qt::AlignCenter, text.replace(" ", "\n"));
-        if (FM.width(curText) != FM.width(text))
-            emit requestUpdateGeometry();
-        curText = text;
+        }
         return;
     }
     // position and size
@@ -78,7 +87,7 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
     painter.setBrush(QColor(0, 0, 0, 30));
     painter.drawRoundedRect(QRect(-67, -61, 134, 127), 12, 12);
     // background
-    painter.setBrush(QColor(255, 255, 255, 160));
+    painter.setBrush(QColor(200, 201, 202));
     painter.drawRoundedRect(QRect(-66, -60, 132, 120), 8, 8);
     QLinearGradient m_gradient(0, -52, 0, 0);
     m_gradient.setColorAt(0, QColor(28, 122, 176));
@@ -108,6 +117,6 @@ void NetspeedWidget::paintEvent(QPaintEvent *e)
     QRect rectangle = QRect(-59, -53, 118, 106);
     painter.setPen(QColor(0, 0, 0, 70));
     painter.drawText(rectangle.adjusted (0, 2, 0, 0), Qt::AlignCenter, text.replace(" ","\n"));
-    painter.setPen(Qt::white);
+    painter.setPen(QColor(234, 252, 254));
     painter.drawText(rectangle.adjusted (0, -4, 0, 0), Qt::AlignCenter, text.replace(" ","\n"));
 }
